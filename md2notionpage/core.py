@@ -203,6 +203,17 @@ def process_inline_formatting(text):
 
 
 # katex
+def escape_latex_special_chars(text):
+    # Define a dictionary of special LaTeX characters and their escaped versions
+    special_chars = {
+        "%": "\\%",
+    }
+    # Replace special characters with their escaped versions
+    for char, escape in special_chars.items():
+        text = text.replace(char, escape)
+    return text
+
+
 def convert_markdown_table_to_latex(text):
     split_column = text.split("\n")
     has_header = False
@@ -216,9 +227,10 @@ def convert_markdown_table_to_latex(text):
         modified_content = re.findall(r"(?<=\|).*?(?=\|)", row)
         new_text = ""
         for j, cell in enumerate(modified_content):
-            cell_text = f"\\textsf{{{cell.strip()}}}"
+            # Escape special characters in the cell text
+            cell_text = f"\\textsf{{{escape_latex_special_chars(cell.strip())}}}"
             if i == 0 and has_header:
-                cell_text = f"\\textsf{{\\textbf{{{cell.strip()}}}}}"
+                cell_text = f"\\textsf{{\\textbf{{{escape_latex_special_chars(cell.strip())}}}}}"
             if j == len(modified_content) - 1:
                 cell_text += " \\\\\\hline\n"
             else:
