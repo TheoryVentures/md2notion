@@ -26,7 +26,7 @@ Example Usage:
     notion_page_url = md2notionpage(markdown_text, title, parent_page_id)
 """
 
-import os, re, glob, base64, json
+import re
 from notion_client import Client
 from os import environ
 
@@ -264,8 +264,6 @@ def parse_markdown_to_notion_blocks(markdown):
     unordered_list_pattern_nested = r"^( *)(\-) "
     heading_pattern = r"^(#+) "
 
-    # indented_code_pattern = re.compile(r'^ {4}(.+)$', re.MULTILINE)
-    triple_backtick_code_pattern = re.compile(r"^```(.+?)```", re.MULTILINE | re.DOTALL)
     blockquote_pattern = r"^> (.+)$"
     horizontal_line_pattern = r"^-{3,}$"
     image_pattern = r"!\[(.*?)\]\((.*?)\)"
