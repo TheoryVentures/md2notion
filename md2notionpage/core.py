@@ -541,7 +541,9 @@ def parse_md(markdown_text):
     return parse_markdown_to_notion_blocks(markdown_text.strip())
 
 
-def create_notion_page_from_md(markdown_text, title, parent_page_id, cover_url=""):
+def create_notion_page_from_md(
+    markdown_text, title, parent_page_id, title_url=None, icon_url=None
+):
     """
     Create a Notion page from Markdown text.
 
@@ -551,8 +553,10 @@ def create_notion_page_from_md(markdown_text, title, parent_page_id, cover_url="
     :type title: str
     :param parent_page_id: The ID of the parent page under which the new page will be created.
     :type parent_page_id: str
-    :param cover_url: (Optional) The URL of the cover image for the new page. Defaults to an empty string.
-    :type cover_url: str
+    :param title_url: (Optional) A URL to link the page title to. If provided, the title will become a clickable hyperlink.
+    :type title_url: str, optional
+    :param icon_url: (Optional) The URL of an external image to use as the page's icon.
+    :type icon_url: str, optional
     :return: The URL of the created Notion page.
     :rtype: str
     """
@@ -564,27 +568,32 @@ def create_notion_page_from_md(markdown_text, title, parent_page_id, cover_url="
         children=[],
     )
 
-    if cover_url != "":
+    properties_payload = {
+        "title": {
+            "title": [
+                {
+                    "type": "text",
+                    "text": {
+                        "content": title,
+                        "link": {"url": title_url} if title_url else None,
+                    },
+                }
+            ]
+        }
+    }
+
+    if icon_url is not None:
         # Update the page with the title and cover (if provided)
         notion.pages.update(
             created_page["id"],
-            properties={
-                "title": {"title": [{"type": "text", "text": {"content": title}}]}
-            },
-            cover={
-                "external": {
-                    # Example URL: https://raw.githubusercontent.com/markomanninen/md2notion/main/photo-1501504905252-473c47e087f8.jpeg
-                    "url": cover_url
-                }
-            },
+            properties=properties_payload,
+            icon={"external": {"url": icon_url}},
         )
     else:
         # Update the page with the title and cover (if provided)
         notion.pages.update(
             created_page["id"],
-            properties={
-                "title": {"title": [{"type": "text", "text": {"content": title}}]}
-            },
+            properties=properties_payload,
         )
 
     # Iterate through the parsed Markdown blocks and append them to the created page
