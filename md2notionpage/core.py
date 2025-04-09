@@ -542,32 +542,43 @@ def parse_md(markdown_text):
 
 
 def create_notion_page_from_md(
-    markdown_text, title, parent_page_id, title_url=None, icon_url=None
+    markdown_text,
+    title,
+    parent_page_id=None,
+    database_id=None,
+    title_url=None,
+    icon_url=None,
 ):
     """
-    Create a Notion page from Markdown text.
+    Create a Notion page from Markdown text, either under a parent page or in a database.
 
     :param markdown_text: The Markdown text to be converted into a Notion page.
     :type markdown_text: str
     :param title: The title of the new Notion page.
     :type title: str
-    :param parent_page_id: The ID of the parent page under which the new page will be created.
-    :type parent_page_id: str
+    :param parent_page_id: (Optional) The ID of the parent page under which the new page will be created.
+    :type parent_page_id: str, optional
+    :param database_id: (Optional) The ID of the Notion database to create the page in.
+    :type database_id: str, optional
     :param title_url: (Optional) A URL to link the page title to. If provided, the title will become a clickable hyperlink.
     :type title_url: str, optional
     :param icon_url: (Optional) The URL of an external image to use as the page's icon.
     :type icon_url: str, optional
     :return: The URL of the created Notion page.
     :rtype: str
+    :raises ValueError: If neither parent_page_id nor database_id is provided.
     """
+    # Validate input
+    if parent_page_id is None and database_id is None:
+        raise ValueError("Either parent_page_id or database_id must be provided")
 
-    # Create a new child page under the parent page with the given title
-    created_page = notion.pages.create(
-        parent={"type": "page_id", "page_id": parent_page_id},
-        properties={},
-        children=[],
-    )
+    # Prepare the parent payload
+    if parent_page_id:
+        parent_payload = {"type": "page_id", "page_id": parent_page_id}
+    else:
+        parent_payload = {"type": "database_id", "database_id": database_id}
 
+    # Prepare properties payload
     properties_payload = {
         "title": {
             "title": [
@@ -582,18 +593,18 @@ def create_notion_page_from_md(
         }
     }
 
+    # Create the page
+    created_page = notion.pages.create(
+        parent=parent_payload,
+        properties=properties_payload,
+        children=[],
+    )
+
+    # Update page with icon if provided
     if icon_url is not None:
-        # Update the page with the title and cover (if provided)
         notion.pages.update(
             created_page["id"],
-            properties=properties_payload,
             icon={"external": {"url": icon_url}},
-        )
-    else:
-        # Update the page with the title and cover (if provided)
-        notion.pages.update(
-            created_page["id"],
-            properties=properties_payload,
         )
 
     # Iterate through the parsed Markdown blocks and append them to the created page
