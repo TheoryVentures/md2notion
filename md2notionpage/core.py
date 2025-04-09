@@ -579,6 +579,9 @@ def create_notion_page_from_md(
         parent_payload = {"type": "database_id", "database_id": database_id}
 
     # Prepare properties payload
+    if title_url and not title_url.startswith(("http://", "https://")):
+        title_url = f"https://{title_url}"
+
     properties_payload = {
         "title": {
             "title": [
